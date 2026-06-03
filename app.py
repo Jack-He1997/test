@@ -1,24 +1,65 @@
-### 第二步：部署代码 (app.py)
-这是你的核心逻辑。它会自动处理图片和录音：
-
-```python
 import streamlit as st
 from openai import OpenAI
 
-# 在 Streamlit 中设置 API Key
-api_key = st.sidebar.text_input("请输入你的 OpenAI API Key", type="password")
-client = OpenAI(api_key=api_key)
+# Sidebar for API Key
+api_key = st.sidebar.text_input("OpenAI API Key", type="password")
 
 st.title("模考智能反馈系统")
 
-# 这里填入我们之前定好的雅思/托福反馈模板
-template = """(在此处粘贴我之前给你整理好的那个详细的反馈模板文本)"""
+# 定义模板
+TEMPLATES = {
+    "雅思": """雅思模考反馈
+总分：
+听力：
+阅读：
+写作：
+口语：
+【写作】
+小作文：
+任务回应：
+连贯与衔接：
+词汇多样性：
+语法准确性与多样性：
+大作文：
+任务回应：
+连贯与衔接：
+词汇多样性：
+语法准确性与多样性：
+【口语】
+流利度与连贯性：
+词汇多样性：
+语法准确性与多样性：
+发音：""",
+    "托福": """托福模考反馈
+总分：
+阅读：
+听力：
+写作：
+口语：
+【写作】
+Task 1: /10
+Task 2: /5
+Task 3: /5
+Task 2 Email评价：
+Task 3 Discussion评价：
+【口语】
+Part 1评价：
+Part 2评价："""
+}
 
-uploaded_file = st.file_uploader("上传文件 (作文图/录音)", type=['jpg', 'png', 'mp3', 'wav'])
+exam_type = st.selectbox("选择考试类型", ["雅思", "托福"])
+uploaded_file = st.file_uploader("上传文件", type=['jpg', 'png', 'mp3', 'wav'])
 
-if st.button("开始分析") and api_key:
-    with st.spinner("正在批改..."):
-        # 如果是图片，AI会自动识别；如果是录音，Whisper会自动转写
-        # 这里就是调用智能大脑的核心代码
-        st.write("反馈报告生成中...")
-        # (此处代码省略了具体的调用逻辑，只需确保你的模板被传入即可)
+if st.button("开始分析") and api_key and uploaded_file:
+    client = OpenAI(api_key=api_key)
+    with st.spinner("正在批改中..."):
+        # 这里是调用模型的逻辑
+        # 简单演示：直接将请求发给 GPT-4o
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": f"你是一个考官，请严格按照以下模板输出反馈: {TEMPLATES[exam_type]}"},
+                {"role": "user", "content": "请分析这个学生的文件。"}
+            ]
+        )
+        st.markdown(response.choices[0].message.content)
