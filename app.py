@@ -1,3 +1,6 @@
+### 第二步：部署代码 (app.py)
+这是你的核心逻辑。它会自动处理图片和录音：
+
 ```python
 import streamlit as st
 from openai import OpenAI
